@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.7/angular.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.all.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+    <title>Angular JS ToDo App</title>
+
+    <style>
+        .is-true {
+            text-decoration: line-through !important;
+        }
+    </style>
+</head>
+
+<body ng-app="myApp" ng-controller="myController">
+    <div class="container">
+        <h2 class="text-center text-info">{{title}}</h1>
+            <br>
+
+            <div class="alert alert-warning" role="alert" ng-if="todos.length <= 0">
+                Todo List is Empty!
+            </div>
+
+            <ol class="list-group">
+                <li class="list-group-item" ng-repeat="todo in todos">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="todo.done" ng-click="toggleTodoStatus(todo._id)">
+                        <span class="is-{{todo.done}}">{{todo.title}}</span>
+                    </label>
+                    <button class="btn btn-sm btn-danger" ng-click="removeTodo(todo._id)">X</button>
+                </li>
+
+                <br>
+                <div class="input-group mb-3 col-sm-6">
+                    <input class="form-control" placeholder="Add new todo" aria-label="Add new todo"
+                        aria-describedby="basic-addon2" type="text" name="todovalue" ng-model="todovalue"
+                        ng-keypress="$event.keyCode == 13 && addTodo(todovalue)">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-success" type="button" ng-click="addTodo(todovalue)">Add</button>
+                    </div>
+                    &nbsp;&nbsp;
+                    <button class="btn btn-outline-info" type="button" ng-click="addRandomTodo()">Add a Random
+                        Todo</button>
+                </div>
+
+            </ol>
+    </div>
+    <script>
+
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        });
+
+        //var socket = io();
+        //socket.on('message', function(data){console.log(data)});
+
+        let app = angular.module('myApp', []);
+        app.controller('myController', ($scope, $http) => {
+            $scope.title = "Test App";
+            $scope.todos = [];
+
+            $http.get('https://learnjs-kinnngg.c9users.io/api/').then((response) => {
+                $scope.todos = response.data;
+            }).catch(err => {
+                console.log(err);
+            })
+
+            $scope.addTodo = (value) => {
+                if (value === "") { console.log("Empty"); return; }
+                if ($scope.todos.indexOf(value) > -1) { console.log("Duplicate"); return; }
+
+                $http.post('https://learnjs-kinnngg.c9users.io/api/add/', { title: value })
+                    .then((response) => {
+                        console.log(response.data);
+                        Toast.fire({
+                            type: 'success',
+                            title: 'New Todo Added Successfully'
+                        })
+
+                        $scope.todos.push(response.data);
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+                $scope.todovalue = "";
+            }
+
+            $scope.addRandomTodo = () => {
+                $http.get('https://learnjs-kinnngg.c9users.io/api/add/random')
+                    .then((response) => {
+                        console.log(response.data);
+                        $scope.todos.push(response.data);
+                        Toast.fire({
+                            type: 'success',
+                            title: 'Random Todo Added Successfully'
+                        })
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+            }
+
+            $scope.toggleTodoStatus = (id) => {
+                $http.post('https://learnjs-kinnngg.c9users.io/api/toggleDone', { id: id }).then((response) => {
+                    console.log(response.data);
+                    Toast.fire({
+                        type: 'success',
+                        title: 'Request Completed!'
+                    })
+                });
+            }
+
+            $scope.removeTodo = (index) => {
+                $http.delete('https://learnjs-kinnngg.c9users.io/api/delete/' + index)
+                    .then((res) => {
+                        console.log("Success")
+                        Toast.fire({
+                            type: 'success',
+                            title: 'Todo Deleted Successfully'
+                        })
+
+                        //$scope.todos = $scope.todos.filter(function (data) {
+                        //    return (data._id !== index);
+                        //});
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    })
+
+                $scope.todos = $scope.todos.filter(function (data) {
+                    return (data._id !== index);
+                });
+            }
+        })
+    </script>
+</body>
+
+</html>
