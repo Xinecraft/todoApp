@@ -30,16 +30,7 @@
             <div class="alert alert-warning" role="alert" ng-if="todos.length <= 0">
                 Todo List is Empty!
             </div>
-
-            <ol class="list-group">
-                <li class="list-group-item" ng-repeat="todo in todos">
-                    <label class="checkbox">
-                        <input type="checkbox" ng-model="todo.done" ng-click="toggleTodoStatus(todo._id)">
-                        <span class="is-{{todo.done}}">{{todo.title}}</span>
-                    </label>
-                    <button class="btn btn-sm btn-danger" ng-click="removeTodo(todo._id)">X</button>
-                </li>
-
+            <todolist></todolist>
                 <br>
                 <div class="input-group mb-3 col-sm-6">
                     <input class="form-control" placeholder="Add new todo" aria-label="Add new todo"
@@ -52,23 +43,32 @@
                     <button class="btn btn-outline-info" type="button" ng-click="addRandomTodo()">Add a Random
                         Todo</button>
                 </div>
-
-            </ol>
     </div>
     <script>
 
+        /*global Swal*/
         const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
             showConfirmButton: false,
             timer: 3000
         });
-
+        
+        /*global angular*/
         let app = angular.module('myApp', []);
-        app.controller('myController', ($scope, $http) => {
+        
+        app.service('todos',function(){
+            var todolist = [];
+            
+            return {
+                todolist: todolist
+            }
+        })
+        
+        app.controller('myController', ($scope, $http, todos) => {
             
             $scope.title = "Test App";
-            $scope.todos = [];
+            $scope.todos = todos.todolist;
             
             $http.get('https://learnjs-kinnngg.c9users.io/api/').then((response) => {
                 $scope.todos = response.data;
@@ -139,18 +139,36 @@
                 });
             }
             
-            var socket = io();
-            socket.on('message', function(data){
-                if(data.type == 'delete')
-                {
-                    //TODO: Fix why not updating the DOM
-                    $scope.todos = $scope.todos.filter(function (d) {
-                    return (d._id !== data.data._id);
-                });
-                console.log($scope.todos);
-                }
-            });
-        })
+        }); //Controller Ends
+        
+        /*global io*/
+         //   var socket = io();
+         //   socket.on('message', function(data, todos){
+         //       if(data.type == 'delete')
+         //       {
+         //           //TODO: Fix why not updating the DOM
+         //           todos.todolist = todos.todolist.filter(function (d) {
+         //           return (d._id !== data.data._id);
+         //       });
+         //       console.log($scope.todos);
+         //       }
+         //   });
+        
+        app.directive('todolist', () => {
+            var directive = {};
+            directive.restrict = 'E'; /* restrict this directive to elements */
+            directive.template = `<ol class="list-group">
+                <li class="list-group-item" ng-repeat="todo in todos">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="todo.done" ng-click="toggleTodoStatus(todo._id)">
+                        <span class="is-{{todo.done}}">{{todo.title}}</span>
+                    </label>
+                    <button class="btn btn-sm btn-danger" ng-click="removeTodo(todo._id)">X</button>
+                </li>
+            </ol>`;
+            return directive;
+        });
+        
     </script>
 </body>
 
