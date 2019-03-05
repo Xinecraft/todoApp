@@ -10,14 +10,11 @@ exports.getShowTodos = (req, res) => {
 exports.getDeleteATodo = (req, res) => {
    Todo.deleteOne(req.params.id).then(() => {
       
-//      io.on('connection', function(socket) {
-//   console.log('A user connected');
-//        io.emit('message',
-//       {
-//           type: 'delete',
-//           data: {_id: 5439857324955}
-//       });
-//   }); 
+        req.io.emit('message',
+       {
+           type: 'delete',
+           data: {_id: req.params.id}
+       });
        res.json({code: "Success"});
    })
 }

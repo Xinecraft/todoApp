@@ -64,14 +64,12 @@
             timer: 3000
         });
 
-        //var socket = io();
-        //socket.on('message', function(data){console.log(data)});
-
         let app = angular.module('myApp', []);
         app.controller('myController', ($scope, $http) => {
+            
             $scope.title = "Test App";
             $scope.todos = [];
-
+            
             $http.get('https://learnjs-kinnngg.c9users.io/api/').then((response) => {
                 $scope.todos = response.data;
             }).catch(err => {
@@ -131,10 +129,6 @@
                             type: 'success',
                             title: 'Todo Deleted Successfully'
                         })
-
-                        //$scope.todos = $scope.todos.filter(function (data) {
-                        //    return (data._id !== index);
-                        //});
                     })
                     .catch(err => {
                         console.log(err);
@@ -144,6 +138,18 @@
                     return (data._id !== index);
                 });
             }
+            
+            var socket = io();
+            socket.on('message', function(data){
+                if(data.type == 'delete')
+                {
+                    //TODO: Fix why not updating the DOM
+                    $scope.todos = $scope.todos.filter(function (d) {
+                    return (d._id !== data.data._id);
+                });
+                console.log($scope.todos);
+                }
+            });
         })
     </script>
 </body>
